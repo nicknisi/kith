@@ -17,6 +17,7 @@ export function createAuthorizeUrl(
   url.searchParams.set("response_type", "code");
   url.searchParams.set("code_challenge", params.codeChallenge);
   url.searchParams.set("code_challenge_method", "S256");
+  url.searchParams.set("provider", "authkit");
   url.searchParams.set("state", params.state);
   if (params.screenHint) url.searchParams.set("screen_hint", params.screenHint);
   if (params.loginHint) url.searchParams.set("login_hint", params.loginHint);

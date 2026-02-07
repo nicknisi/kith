@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>kith — Live Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #030520;
+      --bg-surface: #0a0e2a;
+      --bg-code: #0d1130;
+      --text: #e8e8f0;
+      --text-muted: #8b8ca7;
+      --purple: #6363F1;
+      --purple-dim: rgba(99, 99, 241, 0.15);
+      --teal: #23F0C3;
+      --teal-dim: rgba(35, 240, 195, 0.1);
+      --border: rgba(99, 99, 241, 0.2);
+      --mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Code', 'Fira Code', monospace;
+      --sans: 'Untitled Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    /* ── Layout ─────────────────────────── */
+    .demo {
+      max-width: 480px;
+      width: 100%;
+    }
+
+    .logo {
+      font-family: var(--mono);
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .logo span { color: var(--purple); }
+
+    .subtitle {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 32px;
+    }
+
+    /* ── Card ───────────────────────────── */
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px;
+      text-align: center;
+    }
+
+    /* ── Signed-out state ────────────────── */
+    .signed-out-msg {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-bottom: 24px;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    .btn {
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      font-weight: 500;
+      padding: 10px 24px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.1s, opacity 0.15s;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); opacity: 0.9; }
+
+    .btn-primary {
+      background: var(--purple);
+      color: #fff;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--purple);
+      border: 1px solid var(--purple);
+    }
+
+    .btn-danger {
+      background: transparent;
+      color: #f06;
+      border: 1px solid rgba(255, 0, 102, 0.3);
+      font-size: 0.8rem;
+      padding: 8px 20px;
+    }
+
+    /* ── Signed-in state ─────────────────── */
+    .avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: var(--purple-dim);
+      border: 2px solid var(--purple);
+      margin: 0 auto 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      color: var(--purple);
+      font-family: var(--mono);
+      overflow: hidden;
+    }
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .user-name {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .user-email {
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      color: var(--teal);
+      margin-bottom: 4px;
+    }
+
+    .user-id {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+      word-break: break-all;
+    }
+
+    /* ── Event log ───────────────────────── */
+    .log {
+      margin-top: 24px;
+      text-align: left;
+    }
+
+    .log-title {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .log-entries {
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      line-height: 1.8;
+      color: var(--text-muted);
+      max-height: 160px;
+      overflow-y: auto;
+    }
+
+    .log-entry .ts { opacity: 0.5; }
+    .log-entry .ev { color: var(--teal); }
+
+    /* ── Back link ───────────────────────── */
+    .back {
+      margin-top: 24px;
+      text-align: center;
+    }
+
+    .back a {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+    .back a:hover { color: var(--teal); }
+
+    /* ── Hidden helper ───────────────────── */
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <div class="demo">
+    <div class="logo"><span>&lt;</span>kith<span>/&gt;</span> <span style="font-size:0.75rem; color: var(--text-muted); font-weight: 400;">demo</span></div>
+    <div class="subtitle">Live AuthKit PKCE flow</div>
+
+    <div class="card">
+      <!-- Signed-out view -->
+      <div id="signed-out">
+        <p class="signed-out-msg">Not signed in</p>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="AuthKit.signIn()">Sign In</button>
+          <button class="btn btn-secondary" onclick="AuthKit.signUp()">Sign Up</button>
+        </div>
+      </div>
+
+      <!-- Signed-in view -->
+      <div id="signed-in" hidden>
+        <div class="avatar" id="avatar"></div>
+        <div class="user-name" id="user-name"></div>
+        <div class="user-email" id="user-email"></div>
+        <div class="user-id" id="user-id"></div>
+        <button class="btn btn-danger" onclick="AuthKit.signOut()">Sign Out</button>
+      </div>
+    </div>
+
+    <!-- Event log -->
+    <div class="log">
+      <div class="log-title">Event Log</div>
+      <div class="log-entries" id="log"></div>
+    </div>
+
+    <div class="back">
+      <a href=".">&larr; back to docs</a>
+    </div>
+  </div>
+
+  <!-- kith -->
+  <script
+    src="authkit.js"
+    data-client-id="client_01JA4BGY6RK3NHY7NM0NWGPZBG"
+    data-redirect-uri="https://nicknisi.github.io/kith/demo"
+  ></script>
+
+  <script>
+    var log = document.getElementById("log");
+
+    function addLog(event) {
+      var t = new Date().toLocaleTimeString("en", { hour12: false });
+      var entry = document.createElement("div");
+      entry.className = "log-entry";
+
+      var ts = document.createElement("span");
+      ts.className = "ts";
+      ts.textContent = t + " ";
+      var ev = document.createElement("span");
+      ev.className = "ev";
+      ev.textContent = event;
+
+      entry.appendChild(ts);
+      entry.appendChild(ev);
+      log.prepend(entry);
+    }
+
+    function showUser(user) {
+      document.getElementById("signed-out").hidden = true;
+      document.getElementById("signed-in").hidden = false;
+
+      var avatar = document.getElementById("avatar");
+      avatar.textContent = "";
+      if (user.profilePictureUrl) {
+        var img = document.createElement("img");
+        img.src = user.profilePictureUrl;
+        img.alt = "";
+        avatar.appendChild(img);
+      } else {
+        avatar.textContent = (user.firstName || user.email || "?")[0].toUpperCase();
+      }
+
+      var name = [user.firstName, user.lastName].filter(Boolean).join(" ");
+      document.getElementById("user-name").textContent = name || "User";
+      document.getElementById("user-email").textContent = user.email || "";
+      document.getElementById("user-id").textContent = user.sub;
+    }
+
+    function showSignedOut() {
+      document.getElementById("signed-out").hidden = false;
+      document.getElementById("signed-in").hidden = true;
+    }
+
+    document.addEventListener("authkit:ready", function (e) {
+      addLog("authkit:ready");
+      if (e.detail && e.detail.user) showUser(e.detail.user);
+    });
+
+    document.addEventListener("authkit:signed-in", function (e) {
+      addLog("authkit:signed-in");
+      if (e.detail && e.detail.user) showUser(e.detail.user);
+    });
+
+    document.addEventListener("authkit:signed-out", function () {
+      addLog("authkit:signed-out");
+      showSignedOut();
+    });
+  </script>
+
+</body>
+</html>

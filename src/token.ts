@@ -6,17 +6,18 @@ export async function exchangeCode(
 ): Promise<TokenResponse> {
   const url = new URL("/user_management/authenticate", config.apiBaseUrl);
 
-  const body = new URLSearchParams({
-    grant_type: "authorization_code",
-    client_id: config.clientId,
-    code: params.code,
-    code_verifier: params.codeVerifier,
-  });
-
   const response = await fetch(url.toString(), {
     method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body,
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json, text/plain, */*",
+    },
+    body: JSON.stringify({
+      grant_type: "authorization_code",
+      client_id: config.clientId,
+      code: params.code,
+      code_verifier: params.codeVerifier,
+    }),
   });
 
   if (!response.ok) {

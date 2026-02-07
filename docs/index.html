@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>kith — WorkOS AuthKit in a script tag</title>
+  <meta name="description" content="Drop-in authentication for any website. WorkOS AuthKit PKCE flow in a single script tag.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #030520;
+      --bg-surface: #0a0e2a;
+      --bg-code: #0d1130;
+      --text: #e8e8f0;
+      --text-muted: #8b8ca7;
+      --purple: #6363F1;
+      --purple-dim: rgba(99, 99, 241, 0.15);
+      --teal: #23F0C3;
+      --teal-dim: rgba(35, 240, 195, 0.1);
+      --border: rgba(99, 99, 241, 0.2);
+      --mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Code', 'Fira Code', monospace;
+      --sans: 'Untitled Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      --max-width: 960px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: var(--purple); text-decoration: none; }
+    a:hover { color: var(--teal); }
+
+    /* ── Header ─────────────────────────── */
+    header {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 24px 24px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-family: var(--mono);
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -0.5px;
+    }
+
+    .logo span { color: var(--purple); }
+
+    .gh-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      padding: 6px 14px;
+      border-radius: 6px;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .gh-link:hover { border-color: var(--purple); color: var(--text); }
+    .gh-link svg { width: 16px; height: 16px; fill: currentColor; }
+
+    /* ── Hero ────────────────────────────── */
+    .hero {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 80px 24px 64px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+    }
+
+    .hero-text h1 {
+      font-family: var(--mono);
+      font-size: clamp(2.5rem, 5vw, 3.5rem);
+      font-weight: 600;
+      line-height: 1.1;
+      letter-spacing: -1px;
+      margin-bottom: 16px;
+    }
+
+    .hero-text h1 .accent { color: var(--purple); }
+
+    .hero-text p {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      max-width: 400px;
+      line-height: 1.5;
+    }
+
+    .hero-code {
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .code-header {
+      background: var(--purple);
+      padding: 8px 16px;
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #fff;
+    }
+
+    .code-body {
+      padding: 20px;
+      overflow-x: auto;
+    }
+
+    pre {
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      line-height: 1.7;
+      color: var(--text);
+      white-space: pre;
+      margin: 0;
+    }
+
+    pre .tag { color: var(--purple); }
+    pre .attr { color: var(--teal); }
+    pre .str { color: #f5a623; }
+    pre .cmt { color: var(--text-muted); }
+    pre .kw { color: #c792ea; }
+    pre .fn { color: #82aaff; }
+    pre .op { color: var(--text-muted); }
+    pre .prop { color: var(--teal); }
+
+    /* ── Sections ────────────────────────── */
+    .content {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    section {
+      padding: 64px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    section h2 {
+      font-family: var(--mono);
+      font-size: 1.4rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    section h2 .accent { color: var(--purple); }
+
+    section > p {
+      color: var(--text-muted);
+      margin-bottom: 32px;
+      max-width: 600px;
+    }
+
+    h3 {
+      font-family: var(--mono);
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--teal);
+      margin: 32px 0 8px;
+    }
+
+    h3:first-of-type { margin-top: 0; }
+
+    .method-sig {
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .method-desc {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-bottom: 24px;
+      padding-left: 2px;
+    }
+
+    .param-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      margin: 12px 0 24px;
+    }
+
+    .param-table th {
+      text-align: left;
+      font-family: var(--mono);
+      font-weight: 500;
+      color: var(--text-muted);
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .param-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(99, 99, 241, 0.08);
+      vertical-align: top;
+    }
+
+    .param-table td:first-child {
+      font-family: var(--mono);
+      color: var(--teal);
+      white-space: nowrap;
+      font-size: 0.85rem;
+    }
+
+    .param-table td:nth-child(2) {
+      font-family: var(--mono);
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+
+    .param-table td:last-child {
+      color: var(--text-muted);
+    }
+
+    .inline-code {
+      font-family: var(--mono);
+      font-size: 0.85em;
+      background: var(--purple-dim);
+      padding: 2px 7px;
+      border-radius: 4px;
+      color: var(--purple);
+    }
+
+    .inline-teal {
+      font-family: var(--mono);
+      font-size: 0.85em;
+      background: var(--teal-dim);
+      padding: 2px 7px;
+      border-radius: 4px;
+      color: var(--teal);
+    }
+
+    /* ── Config grid ─────────────────────── */
+    .config-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .config-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+    }
+
+    .config-card h4 {
+      font-family: var(--mono);
+      font-size: 0.9rem;
+      color: var(--teal);
+      margin-bottom: 6px;
+    }
+
+    .config-card p {
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    .config-card .default {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      color: var(--purple);
+      margin-top: 8px;
+    }
+
+    /* ── Events ───────────────────────────── */
+    .event-list {
+      display: grid;
+      gap: 16px;
+    }
+
+    .event-item {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+    }
+
+    .event-item h4 {
+      font-family: var(--mono);
+      font-size: 0.9rem;
+      color: var(--teal);
+      margin-bottom: 4px;
+    }
+
+    .event-item p {
+      color: var(--text-muted);
+      font-size: 0.88rem;
+    }
+
+    .event-item .detail {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      color: var(--purple);
+      margin-top: 8px;
+    }
+
+    /* ── Footer ──────────────────────────── */
+    footer {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 40px 24px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    footer a { color: var(--text-muted); }
+    footer a:hover { color: var(--teal); }
+
+    /* ── Responsive ──────────────────────── */
+    @media (max-width: 700px) {
+      .hero {
+        grid-template-columns: 1fr;
+        padding: 48px 24px 40px;
+        gap: 32px;
+      }
+      .config-grid { grid-template-columns: 1fr; }
+      header { padding: 16px 24px 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="logo"><span>&lt;</span>kith<span>/&gt;</span></div>
+    <nav style="display:flex;gap:16px;align-items:center;">
+      <a class="gh-link" href="demo.html">Demo</a>
+      <a class="gh-link" href="https://github.com/nicknisi/authkit-script" target="_blank" rel="noopener">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+    </nav>
+  </header>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-text">
+      <h1>Auth in<br><span class="accent">one tag</span></h1>
+      <p>WorkOS AuthKit. One script tag. Zero build step.</p>
+      <a href="demo.html" style="display:inline-block;margin-top:20px;font-family:var(--mono);font-size:0.85rem;padding:10px 24px;border-radius:8px;background:var(--purple);color:#fff;">Try the demo</a>
+    </div>
+    <div class="hero-code">
+      <div class="code-header">that's it</div>
+      <div class="code-body">
+<pre><span class="tag">&lt;script</span> <span class="attr">src</span>=<span class="str">"https://unpkg.com/kith"</span> <span class="attr">data-client-id</span>=<span class="str">"client_01ABC..."</span><span class="tag">&gt;&lt;/script&gt;</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- Quick Start -->
+    <section id="quick-start">
+      <h2><span class="accent">#</span> Quick Start</h2>
+      <p>Add the tag with your client ID and redirect URI. Wire up buttons. Done.</p>
+      <p style="margin-top:-24px">Set <span class="inline-code">data-redirect-uri</span> to the page that handles the OAuth callback — this must match a redirect URI in your <a href="https://dashboard.workos.com" target="_blank">WorkOS dashboard</a>. Defaults to <span class="inline-code">window.location.origin</span> if omitted.</p>
+
+      <div class="hero-code">
+        <div class="code-header">index.html</div>
+        <div class="code-body">
+<pre><span class="tag">&lt;script</span> <span class="attr">src</span>=<span class="str">"https://unpkg.com/kith"</span>
+  <span class="attr">data-client-id</span>=<span class="str">"client_01ABC..."</span>
+  <span class="attr">data-redirect-uri</span>=<span class="str">"https://example.com"</span>
+<span class="tag">&gt;&lt;/script&gt;</span>
+
+<span class="tag">&lt;button</span> <span class="attr">onclick</span>=<span class="str">"AuthKit.signIn()"</span><span class="tag">&gt;</span>Sign In<span class="tag">&lt;/button&gt;</span>
+<span class="tag">&lt;button</span> <span class="attr">onclick</span>=<span class="str">"AuthKit.signOut()"</span><span class="tag">&gt;</span>Sign Out<span class="tag">&lt;/button&gt;</span></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- API Reference -->
+    <section id="api">
+      <h2><span class="accent">#</span> API Reference</h2>
+      <p>All methods are available on the global <span class="inline-code">AuthKit</span> object.</p>
+
+      <!-- ready -->
+      <h3>AuthKit.ready</h3>
+      <div class="method-sig"><span class="kw">readonly</span> ready: <span class="kw">Promise</span>&lt;{ user: AuthKitUser | <span class="kw">null</span> }&gt;</div>
+      <p class="method-desc">Resolves when the script has initialized and any OAuth callback has been processed. If the user has an active session, <span class="inline-code">user</span> is populated.</p>
+
+      <!-- signIn -->
+      <h3>AuthKit.signIn()</h3>
+      <div class="method-sig">signIn(opts?: SignInOptions): <span class="kw">Promise</span>&lt;<span class="kw">void</span>&gt;</div>
+      <p class="method-desc">Starts the OAuth PKCE flow and redirects the user to the WorkOS sign-in page.</p>
+      <table class="param-table">
+        <tr><th>Option</th><th>Type</th><th>Description</th></tr>
+        <tr><td>loginHint</td><td>string</td><td>Pre-fill the email field</td></tr>
+        <tr><td>screenHint</td><td>"sign-in" | "sign-up"</td><td>Which screen to show (default: sign-in)</td></tr>
+        <tr><td>organizationId</td><td>string</td><td>Target a specific organization</td></tr>
+        <tr><td>invitationToken</td><td>string</td><td>Accept an organization invitation</td></tr>
+        <tr><td>state</td><td>Record&lt;string, unknown&gt;</td><td>Custom state persisted through the flow</td></tr>
+      </table>
+
+      <!-- signUp -->
+      <h3>AuthKit.signUp()</h3>
+      <div class="method-sig">signUp(opts?: SignInOptions): <span class="kw">Promise</span>&lt;<span class="kw">void</span>&gt;</div>
+      <p class="method-desc">Shorthand for <span class="inline-code">signIn({ screenHint: "sign-up" })</span>. Accepts all the same options except <span class="inline-code">screenHint</span>.</p>
+
+      <!-- signOut -->
+      <h3>AuthKit.signOut()</h3>
+      <div class="method-sig">signOut(opts?: { returnTo?: <span class="kw">string</span> }): <span class="kw">void</span></div>
+      <p class="method-desc">Clears the local session and redirects to the WorkOS logout endpoint. Optionally redirect to a custom URL after logout.</p>
+
+      <!-- getUser -->
+      <h3>AuthKit.getUser()</h3>
+      <div class="method-sig">getUser(): AuthKitUser | <span class="kw">null</span></div>
+      <p class="method-desc">Returns the current user or <span class="inline-code">null</span> if not signed in. The user object includes:</p>
+      <table class="param-table">
+        <tr><th>Property</th><th>Type</th><th>Description</th></tr>
+        <tr><td>sub</td><td>string</td><td>User ID</td></tr>
+        <tr><td>email</td><td>string?</td><td>Email address</td></tr>
+        <tr><td>firstName</td><td>string?</td><td>First name</td></tr>
+        <tr><td>lastName</td><td>string?</td><td>Last name</td></tr>
+        <tr><td>profilePictureUrl</td><td>string?</td><td>Avatar URL</td></tr>
+        <tr><td>organizationId</td><td>string?</td><td>Current organization</td></tr>
+      </table>
+
+      <!-- getAccessToken -->
+      <h3>AuthKit.getAccessToken()</h3>
+      <div class="method-sig">getAccessToken(): <span class="kw">string</span> | <span class="kw">null</span></div>
+      <p class="method-desc">Returns the raw JWT access token for making authenticated API requests, or <span class="inline-code">null</span> if not signed in.</p>
+    </section>
+
+    <!-- Events -->
+    <section id="events">
+      <h2><span class="accent">#</span> Events</h2>
+      <p>Listen on <span class="inline-code">document</span> for lifecycle events. All events bubble.</p>
+
+      <div class="event-list">
+        <div class="event-item">
+          <h4>authkit:ready</h4>
+          <p>Fired when the script has initialized. If a callback was processed, the user is available in the detail.</p>
+          <div class="detail">detail: { user: AuthKitUser | null }</div>
+        </div>
+        <div class="event-item">
+          <h4>authkit:signed-in</h4>
+          <p>Fired after a successful OAuth callback and token exchange.</p>
+          <div class="detail">detail: { user: AuthKitUser }</div>
+        </div>
+        <div class="event-item">
+          <h4>authkit:signed-out</h4>
+          <p>Fired when <span class="inline-code">signOut()</span> is called, before the redirect.</p>
+          <div class="detail">detail: undefined</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Configuration -->
+    <section id="config">
+      <h2><span class="accent">#</span> Configuration</h2>
+      <p>Configure via <span class="inline-code">data-*</span> attributes on the script tag.</p>
+
+      <div class="config-grid">
+        <div class="config-card">
+          <h4>data-client-id</h4>
+          <p>Your WorkOS client ID. <strong>Required.</strong></p>
+          <div class="default">No default</div>
+        </div>
+        <div class="config-card">
+          <h4>data-redirect-uri</h4>
+          <p>OAuth redirect URI. Must match the one configured in your WorkOS dashboard.</p>
+          <div class="default">Default: window.location.origin</div>
+        </div>
+        <div class="config-card">
+          <h4>data-api-hostname</h4>
+          <p>Override the WorkOS API hostname for staging or custom domains.</p>
+          <div class="default">Default: api.workos.com</div>
+        </div>
+        <div class="config-card">
+          <h4>data-dev-mode</h4>
+          <p>Enable development mode. Auto-detected on <span class="inline-teal">localhost</span> and <span class="inline-teal">127.0.0.1</span>.</p>
+          <div class="default">Default: auto-detect</div>
+        </div>
+        <div class="config-card">
+          <h4>data-auto-callback</h4>
+          <p>Automatically handle the OAuth callback when the page loads with a <span class="inline-teal">code</span> parameter.</p>
+          <div class="default">Default: true</div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <span>kith — WorkOS AuthKit in a script tag</span>
+    <a href="https://github.com/nicknisi/authkit-script" target="_blank" rel="noopener">GitHub</a>
+  </footer>
+
+</body>
+</html>
