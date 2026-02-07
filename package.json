@@ -1,0 +1,23 @@
+{
+  "name": "authkit-script",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "happy-dom": "^20.5.0",
+    "prettier": "^3.3.3",
+    "tsup": "^8.1.2",
+    "typescript": "^5.5.3",
+    "vitest": "^4.0.18"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}
